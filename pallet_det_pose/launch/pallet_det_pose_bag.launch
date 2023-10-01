@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <!-- Play rosbag -->
+  <arg name="path" default="$(env PWD)/src/" />
+  <arg name="file_1" default="one_pallet" />
+  <arg name="file_2" default="pallet_sec" />
+  <arg name="file_3" default="multi_pallet" />
+  <arg name="file_4" default="multi_pallet_3top" />
+  <node pkg="rosbag" type="play" name="player" args="-l -r 0.1 --clock $(arg path)$(arg file_3).bag"/> 
+
+
+  <!-- Load Pallet Model -->
+  <arg name="color_width"           default="1280"/>
+  <arg name="color_height"          default="720"/>
+  <arg name="yolo_data_path"        default="$(find pallet_det)/yolo_network_config/cfg/" />
+  <arg name="yolo_weights_path"     default="$(find pallet_det)/yolo_network_config/weights/"/>
+  <arg name="yolo_config_path"      default="$(find pallet_det)/yolo_network_config/cfg/"/>
+  <arg name="image"                 default="/camera/color/image_raw" />
+
+  <param name="color_width"         value="$(arg color_width)" />
+  <param name="color_height"        value="$(arg color_height)" />
+  <param name="data_path"           value="$(arg yolo_data_path)" />
+  <param name="weights_path"        value="$(arg yolo_weights_path)" />
+  <param name="config_path"         value="$(arg yolo_config_path)" />
+  <param name="image"               value="$(arg image)" />
+  <rosparam file="$(find pallet_det)/config/pallet.yaml" command="load" />
+
+  <!-- Pallet Detect -->
+  <node name="pallet_det" pkg="pallet_det" type="real_yolo_detect.py" output="screen" />
+
+  <!-- Pallet Detect Pose -->
+  <node name="pallet_det_pose" pkg="pallet_det_pose" type="pallet_det_pose" output="screen" />
+
+  <!-- Open rviz with predefined settings -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find pallet_det_pose)/conf/pallet_rviz.rviz" respawn="true"/>
+
+</launch>

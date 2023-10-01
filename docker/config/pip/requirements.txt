@@ -1,0 +1,8 @@
+# install python dep
+
+setuptools==67.8.0
+numpy==1.23
+
+
+# serial==0.0.97
+pyserial==3.5

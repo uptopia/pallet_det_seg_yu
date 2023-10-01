@@ -1,0 +1,21 @@
+data_file:
+  names:
+    - pallet_front.data
+    - pallet_hole.data
+
+config_file:
+  names: 
+    - pallet_front.cfg
+    - pallet_hole.cfg
+
+weights_file:
+  names: 
+    - pallet_front.weights
+    - pallet_hole.weights
+
+threshold:
+  value: 0.9
+
+model_num:
+  value: 2
+  

@@ -1,0 +1,5 @@
+classes=1
+train=/home/anderson/yolo_detect_ws/src/pallet_train_model/after_mid/all_with_0401_front/cfg/train.txt
+valid=/home/anderson/yolo_detect_ws/src/pallet_train_model/after_mid/all_with_0401_front/cfg/test.txt
+names=/home/iclab/work/src/pallet_det/yolo_network_config/cfg/pallet_front.names
+backup=/home/anderson/yolo_detect_ws/src/pallet_train_model/after_mid/all_with_0401_front/cfg/weights
