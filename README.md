@@ -3,6 +3,7 @@
 ### https://github.com/open-mmlab/mmdetection
 
 config: ./mmdetection2/configs/solov2/pallet_test_2.py
+
 weights: pallet.pth
 
 1. cd docker && ./build
