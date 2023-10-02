@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<launch>
+
+  <!-- Play rosbag -->
+  <arg name="path" default="$(env PWD)/src/" />
+  <arg name="file_1" default="one_pallet" />
+  <arg name="file_2" default="pallet_sec" />
+  <node pkg="rosbag" type="play" name="player" args="-l -r 0.1 --clock $(arg path)$(arg file_1).bag"/> 
+
+  <!-- SOLOv2 Instance Segmentation launch-prefix="gnome-terminal - -command" -->
+  <node pkg="pallet_seg" type="solo_detect.py" name="solo_detect" output="screen" respawn="true"/>
+
+  <!-- Open rviz with predefined settings -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find solo_cloud)/conf/pallet_rviz.rviz" respawn="true"/> 
+
+</launch>

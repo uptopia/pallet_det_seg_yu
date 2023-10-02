@@ -36,7 +36,7 @@
 #include "softmax_layer.h"
 #include "utils.h"
 #include "upsample_layer.h"
-#include "version.h"
+// #include "version.h"
 #include "yolo_layer.h"
 #include "gaussian_yolo_layer.h"
 #include "representation_layer.h"
@@ -2008,7 +2008,7 @@ void save_weights_upto(network net, char *filename, int cutoff, int save_ema)
 
     int major = MAJOR_VERSION;
     int minor = MINOR_VERSION;
-    int revision = PATCH_VERSION;
+    int revision = MAJOR_VERSION;
     fwrite(&major, sizeof(int), 1, fp);
     fwrite(&minor, sizeof(int), 1, fp);
     fwrite(&revision, sizeof(int), 1, fp);

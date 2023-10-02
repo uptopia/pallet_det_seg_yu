@@ -71,45 +71,7 @@ RUN apt install -y --no-install-recommends \
         # * ROS depend tools
         lsb-release \
     && apt clean \
-# # * Install ROS noetic
-# RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > \
-#     /etc/apt/sources.list.d/ros-latest.list \
-#     && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' \
-#     --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-#     && curl -sSL \
-#     'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' \
-#     | sudo apt-key add - \
-#     && apt update && apt install -y --no-install-recommends ros-noetic-desktop-full \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-# ENV ROS_DISTRO noetic
-# RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >>/home/$USER/.bashrc
-
-# RUN apt update \
-#     && apt install -y --no-install-recommends \
-#         # * ROS depend tools
-#         ros-noetic-ddynamic-reconfigure \
-#         ros-noetic-rgbd-launch \
-#     && apt clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-# RUN sudo apt update
-# RUN sudo apt install -y software-properties-common 
-
-# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-# ####Realsense####
-# RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
-# ## Install packages
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#   #Realsense SDK depend
-# #   librealsense2-dkms \
-#   librealsense2-utils \
-#   librealsense2-dev \
-#   librealsense2-dbg \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists  
-    # && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 RUN ./config/pip/pip_setup.sh
 
@@ -140,44 +102,44 @@ RUN python3 -m mim install mmengine
 RUN pip3 install yapf==0.40.1
 
 
-# # * Install ROS noetic
-# RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > \
-#     /etc/apt/sources.list.d/ros-latest.list \
-#     && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' \
-#     --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-#     && curl -sSL \
-#     'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' \
-#     | sudo apt-key add - \
-#     && apt update && apt install -y --no-install-recommends ros-noetic-desktop-full \
-#     && apt-get clean \
-#     && rm -rf /var/lib/apt/lists/*
+# * Install ROS noetic
+RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > \
+    /etc/apt/sources.list.d/ros-latest.list \
+    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' \
+    --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && curl -sSL \
+    'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' \
+    | sudo apt-key add - \
+    && apt update && apt install -y --no-install-recommends ros-noetic-desktop-full \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# ENV ROS_DISTRO noetic
-# RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >>/home/$USER/.bashrc
+ENV ROS_DISTRO noetic
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >>/home/$USER/.bashrc
 
-# RUN apt update \
-#     && apt install -y --no-install-recommends \
-#         # * ROS depend tools
-#         ros-noetic-ddynamic-reconfigure \
-#         ros-noetic-rgbd-launch \
-#     && apt clean \
-#     && rm -rf /var/lib/apt/lists/*
+RUN apt update \
+    && apt install -y --no-install-recommends \
+        # * ROS depend tools
+        ros-noetic-ddynamic-reconfigure \
+        ros-noetic-rgbd-launch \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# RUN sudo apt update
-# RUN sudo apt install -y software-properties-common 
+RUN sudo apt update
+RUN sudo apt install -y software-properties-common 
 
-# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-# ####Realsense####
-# RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
-# ## Install packages
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#   #Realsense SDK depend
-# #   librealsense2-dkms \
-#   librealsense2-utils \
-#   librealsense2-dev \
-#   librealsense2-dbg \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists  
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+####Realsense####
+RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+## Install packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  #Realsense SDK depend
+#   librealsense2-dkms \
+  librealsense2-utils \
+  librealsense2-dev \
+  librealsense2-dbg \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists  
 
 WORKDIR /
 
