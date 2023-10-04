@@ -18,10 +18,12 @@
 import cv2
 import sys
 sys.path.insert(1, '/opt/installer/open_cv/cv_bridge/lib/python3/dist-packages/')
-sys.path.append('/home/iclab/work/src/mmdetection2/')
+Workspace_Path = sys.path[0].rsplit('/',2)[0]
+sys.path.append(Workspace_Path)
+sys.path.append(Workspace_Path+'/mmdetection2/')
 from cv_bridge import CvBridge, CvBridgeError
 
-from mmdet.apis import init_detector, inference_detector, show_result_pyplot
+from mmdet.apis import init_detector, inference_detector
 import mmcv
 
 import rospy
@@ -32,15 +34,17 @@ from std_msgs.msg import Int32MultiArray
 import numpy as np
 import os
 
+import time
+
 #=====Parameters Setting=====#
 show_result = True
 show_mask = True
 save_result = False
 
-ws_path = '/home/iclab/work/src' #'/home/robotarm/forklift_pallet_ws/src'
+ws_path = Workspace_Path #'/home/robotarm/forklift_pallet_ws/src'
 test_img_path = ws_path + '/solo_detect/test_img/altek_img_1.jpg'
 
-checkpoint_file = ws_path + '/mmdetection2/solov2_model/pallet.pth' #SOLO/configs/solov2/***.py
+checkpoint_file = ws_path + '/mmdetection2/work_dirs/pallet.pth' #SOLO/configs/solov2/***.py
 config_file = ws_path + '/mmdetection2/configs/solov2/pallet_test_2.py'                      #SOLO/data/***.pth
 #=====Parameters Setting=====#
 

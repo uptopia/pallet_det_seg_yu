@@ -88,7 +88,6 @@ RUN pip3 install --upgrade --force-reinstall pip && \
     torchvision==0.11.2+cu111 \
     torchaudio==0.10.1 \
     -f https://download.pytorch.org/whl/cu111/torch_stable.html
-    # pip3 install mmcv==2.0.0rc4 -f https://download.openmmlab.com/mmcv/dist/cu111/torch1.10/index.html
 
 # SOLO depend tools
 RUN pip3 install \
@@ -97,8 +96,8 @@ RUN pip3 install \
     shapely \
     scipy \
     -U openmim 
-RUN python3 -m mim install mmcv-full==1.7.1
-RUN python3 -m mim install mmengine
+RUN mim install mmcv-full==1.7.1
+RUN mim install mmengine
 RUN pip3 install yapf==0.40.1
 
 
@@ -176,12 +175,6 @@ RUN ./config/shell/bash_setup.sh "${USER}" "${GROUP}" \
 # * Switch workspace to ~/work
 RUN sudo mkdir -p /home/"${USER}"/work
 WORKDIR /home/"${USER}"/work
-
-# RUN sudo git clone https://github.com/open-mmlab/mmdetection.git -b 2.x /home/"${USER}"/work/src/mmdetection2
-# WORKDIR /mmdetection2
-# ENV FORCE_CUDA="1"
-# RUN pip3 install --no-cache-dir -r /requirements/build.txt
-# RUN pip3 install --no-cache-dir -e .
 
 # * Make SSH available
 EXPOSE 22
