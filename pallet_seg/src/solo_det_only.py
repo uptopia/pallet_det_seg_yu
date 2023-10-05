@@ -23,7 +23,7 @@ sys.path.append(Workspace_Path)
 sys.path.append(Workspace_Path+'/mmdetection2/')
 from cv_bridge import CvBridge, CvBridgeError
 
-from mmdet.apis import init_detector, inference_detector
+from mmdet.apis import init_detector, inference_detector, show_result_pyplot
 import mmcv
 
 import rospy
@@ -63,33 +63,9 @@ class SOLO_Det:
     def imageCallback(self, img_msg):
         global cnt
 
-        # cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
-        # cv_image = cv2.imread("/home/iclab/work/src/pallet_seg/src/test_img.jpg")
-        cv_image = cv2.imread("/home/iclab/work/src/pallet_seg/test_img/altek_img_1.jpg")
-        h, w, _ = cv_image.shape
-
+        cv_image = self.bridge.imgmsg_to_cv2(img_msg, "bgr8")
         result = inference_detector(self.model, cv_image)
 
-        num_mask = len(result)
-        np.random.seed(42)
-        color_masks = [
-            np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-            for _ in range(num_mask)
-        ]
-        # print(len(result), len(result[0][0]), len(result[1][0]), result[0][0], result[1][0])
-        # print()
-        cur_mask = result[1][0][0]
-        print(cur_mask.shape)
-        # cur_mask = cv2.imresize(cur_mask, (w, h))
-        # print(cur_mask)      
-        cur_mask = (cur_mask>0.5).astype(np.uint8)
-        cur_mask_bool = cur_mask.astype(np.bool)
-        img_show = cv_image.copy()
-        color_mask = color_masks[0]
-        img_show[cur_mask_bool] = cv_image[cur_mask_bool]*0.5+color_mask*0.5
-        cv2.imshow('mamamamsk', img_show)
-        cv2.waitKey(0)
- 
         if show_result == True:
             t_prev = time.time()
             solo_result = self.model.show_result(cv_image, result, score_thr=0.5)
@@ -100,12 +76,10 @@ class SOLO_Det:
             cv2.putText(solo_result, f'FPS {fps}', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
             cv2.imshow("SOLOv2 Instance Segmentation Result", solo_result)
-            cv2.waitKey(0)
 
-            # # 按下q鍵退出程式
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     rospy.signal_shutdown("quit")
-
+            # 按下q鍵退出程式
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                rospy.signal_shutdown("quit")
 
 if __name__=="__main__":
     SOLO_Det()

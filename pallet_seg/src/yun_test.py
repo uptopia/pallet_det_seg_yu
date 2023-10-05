@@ -30,6 +30,7 @@ import rospy
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import Int32MultiArray
+from pallet_seg.msg import pallet_mask
 
 import numpy as np
 import os
@@ -58,6 +59,7 @@ class SOLO_Det:
         
         self.bridge = CvBridge()
         rospy.Subscriber("/camera/color/image_raw", Image, self.imageCallback)
+        self.pallet_mask_pub = rospy.Publisher("/pallet_mask", pallet_mask, queue_size=10)
         rospy.spin()
 
     def imageCallback(self, img_msg):
@@ -78,17 +80,40 @@ class SOLO_Det:
         ]
         # print(len(result), len(result[0][0]), len(result[1][0]), result[0][0], result[1][0])
         # print()
-        cur_mask = result[1][0][0]
-        print(cur_mask.shape)
-        # cur_mask = cv2.imresize(cur_mask, (w, h))
-        # print(cur_mask)      
-        cur_mask = (cur_mask>0.5).astype(np.uint8)
-        cur_mask_bool = cur_mask.astype(np.bool)
+
+        pallet_mask_msg = pallet_mask()
+
+        mask_all=np.zeros((h,w))
         img_show = cv_image.copy()
-        color_mask = color_masks[0]
-        img_show[cur_mask_bool] = cv_image[cur_mask_bool]*0.5+color_mask*0.5
+        for idx in range(num_mask):
+            # idx=-(idx+1)
+            print(idx)
+            cur_mask = result[1][0][idx]
+            print(cur_mask.shape)
+            # cur_mask = cv2.imresize(cur_mask, (w, h))
+            # print(cur_mask)      
+            cur_mask = (cur_mask>0.5).astype(np.uint8)
+            cur_mask_bool = cur_mask.astype(np.bool)
+            # print(cur_mask_bool)
+            color_mask = color_masks[0]
+            # r0, mask_thr = cv2.threshold(cur_mask_bool, 0, 255, cv2.THRESH_BINARY)
+            img_show[cur_mask_bool] = cv_image[cur_mask_bool]*0.5+color_mask*0.5
+            mask_all+=cur_mask_bool
+
+            #pub
+            # mask_msg = self.bridge.cv2_to_imgmsg(mask_thr, encoding="passthrough")
+            #pallet_mask_msg.masks.append(mask_all)
+
+        # pallet_mask_msg.masks = mask_all
+        # solo_mask_msg = self.bridge.cv2_to_imgmsg(mask_all, encoding="passthrough")
+        # self.solo_mask_pub.publish(solo_mask_msg) #all mask in one image
+        # self.pallet_mask_pub.publish(pallet_mask_msg)
+
         cv2.imshow('mamamamsk', img_show)
-        cv2.waitKey(0)
+
+        # ret, thr = cv2.threshold(img_show, 0, 255, cv2.THRESH_BINARY)
+        cv2.imshow('test', mask_all)
+        # cv2.waitKey(0)
  
         if show_result == True:
             t_prev = time.time()
@@ -100,7 +125,7 @@ class SOLO_Det:
             cv2.putText(solo_result, f'FPS {fps}', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
             cv2.imshow("SOLOv2 Instance Segmentation Result", solo_result)
-            cv2.waitKey(0)
+            cv2.waitKey(1)
 
             # # 按下q鍵退出程式
             # if cv2.waitKey(1) & 0xFF == ord('q'):

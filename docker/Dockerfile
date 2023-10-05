@@ -176,6 +176,8 @@ RUN ./config/shell/bash_setup.sh "${USER}" "${GROUP}" \
 RUN sudo mkdir -p /home/"${USER}"/work
 WORKDIR /home/"${USER}"/work
 
+# WORKDIR /home/"${USER}"/work/
+
 # * Make SSH available
 EXPOSE 22
 
