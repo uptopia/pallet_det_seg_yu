@@ -37,7 +37,7 @@
   </include>
   
   <!-- SOLOv2 Instance Segmentation -->
-  <node pkg="pallet_seg" type="solo_detect.py" name="solo_detect" output="screen"/>
+  <node pkg="pallet_seg" type="solo_detect_all.py" name="solo_detect" output="screen"/>
 
   <!-- Open rviz with predefined settings -->
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find pallet_seg_pose)/conf/pallet_rviz.rviz" respawn="true"/>
