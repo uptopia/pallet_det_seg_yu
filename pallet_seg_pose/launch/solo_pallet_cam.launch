@@ -37,7 +37,7 @@
   </include>
   
   <!-- SOLOv2 Instance Segmentation -->
-  <node name="pallet_seg" pkg="pallet_seg" type="solo_detect.py"/>
+  <node name="pallet_seg" pkg="pallet_seg" type="solo_detect_all.py"/>
 
   <!-- SOLOv2 Pallet Mask Cloud -->
   <node name="pallet_seg_pose" pkg="pallet_seg_pose" type="pallet_seg_pose" output="screen" /> 
