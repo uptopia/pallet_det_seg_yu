@@ -48,6 +48,7 @@ COPY --chown="${USER}":"${GROUP}" --chmod=0775 config config
 ############################### INSTALL #######################################
 # * Install packages
 RUN apt update
+RUN apt update
 RUN apt install -y --no-install-recommends \
         sudo \
         vim \
