@@ -47,6 +47,7 @@ test_img_path = ws_path + '/solo_detect/test_img/altek_img_1.jpg'
 
 checkpoint_file = ws_path + '/mmdetection2/work_dirs/pallet.pth' #SOLO/configs/solov2/***.py
 config_file = ws_path + '/mmdetection2/configs/solov2/pallet_test_2.py'                      #SOLO/data/***.pth
+score_thr = 0.5
 #=====Parameters Setting=====#
 
 cnt = 0
@@ -74,7 +75,7 @@ class SOLO_Det:
         result = inference_detector(self.model, cv_image)
 
         t_prev = time.time()
-        solo_result = self.model.show_result(cv_image, result, score_thr=0.5)
+        solo_result = self.model.show_result(cv_image, result, score_thr=score_thr)
 
         #display fps and Result
         fps = int(1/(time.time()-t_prev))
@@ -84,59 +85,72 @@ class SOLO_Det:
         # cv2.waitKey(1)
 
 
-        seg_scores = result[0]
+        # seg_scores = result[0][0]
         # print(seg_scores)
+        # print(len(seg_scores))
         # print("=============")
+
+        num_mask = len(result[0][0])
+        elibible_mask=0
+        for elibible_mask in range(num_mask):
+            seg_scores = result[0][0][elibible_mask][4]
+            if(seg_scores<=score_thr):
+                break
+
+        # print(elibible_mask)
+
         seg_box = result[1]
         num_box = len(seg_box)
         print("num_box:", num_box)
         mask_all = np.zeros((h, w))
         img_show = cv_image.copy()
         pallet_mask_msg = pallet_mask()
-        for box_id in range(num_box):
-            print("box_id:", box_id)
-            print(len(seg_box[box_id]), seg_box[box_id])
-            num_mask = len(seg_box[box_id])
-            seg_masks = seg_box[box_id]
-            print("num_mask", num_mask)
+        # box_id = 0
+        # print("box_id:", box_id)
+        # print(len(seg_box[box_id]), seg_box[box_id])
+        # num_mask = len(seg_box[0])
+        seg_masks = seg_box[0]
+        print("num_mask", num_mask)
 
-            np.random.seed(42)
-            color_masks = [
-                np.random.randint(0, 256, (1, 3), dtype=np.uint8)
-                for _ in range(num_mask)
-            ]
+        np.random.seed(42)
+        color_masks = [
+            np.random.randint(0, 256, (1, 3), dtype=np.uint8)
+            for _ in range(num_mask)
+        ]
 
-            for mask_id in range(num_mask):
-                print("mask_id:", mask_id)
-                cur_mask = seg_masks[mask_id]
+        for mask_id in range(elibible_mask):
+            print("mask_id:", mask_id)
+            cur_mask = seg_masks[mask_id]
 
-                h, w = len(cur_mask), len(cur_mask[0])
-                print(h, w, cur_mask.shape)
-                print(cur_mask)
-                
-                cur_mask = (cur_mask>0.5).astype(np.uint8)
-                cur_mask_bool = cur_mask.astype(np.bool)
-                
-                ret0, mask_thr = cv2.threshold(cur_mask, 0, 255, cv2.THRESH_BINARY)
-
-                #pub
-                mask_msg = self.bridge.cv2_to_imgmsg(mask_thr, encoding="passthrough")
-                pallet_mask_msg.masks.append(mask_msg)
-
-                color_mask = color_masks[mask_id]
-                # r0, mask_thr = cv2.threshold(cur_mask_bool, 0, 255, cv2.THRESH_BINARY)
-                img_show[cur_mask_bool] = color_mask#cv_image[cur_mask_bool]*0.5+color_mask*0.5
-                mask_all+=mask_thr
+            h, w = len(cur_mask), len(cur_mask[0])
+            print(h, w, cur_mask.shape)
+            print(cur_mask)
+            
+            # cur_mask = (cur_mask>0.5).astype(np.uint8)
+            # cur_mask_bool = cur_mask.astype(np.bool)
+            cur_mask = np.array((cur_mask>0.5), dtype = np.uint8)
+            cur_mask_bool = np.array(cur_mask, dtype = bool)
+            
+            ret0, mask_thr = cv2.threshold(cur_mask, 0, 255, cv2.THRESH_BINARY)
 
             #pub
-            self.pallet_mask_pub.publish(pallet_mask_msg)
+            mask_msg = self.bridge.cv2_to_imgmsg(mask_thr, encoding="passthrough")
+            pallet_mask_msg.masks.append(mask_msg)
 
-            # Mask Result
-            cv2.imshow('Black Background Mask', mask_all)
-            cv2.imshow('Only Mask', img_show)
-            # 按下q鍵退出程式
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                rospy.signal_shutdown("quit")
+            color_mask = color_masks[mask_id]
+            # r0, mask_thr = cv2.threshold(cur_mask_bool, 0, 255, cv2.THRESH_BINARY)
+            img_show[cur_mask_bool] = color_mask#cv_image[cur_mask_bool]*0.5+color_mask*0.5
+            mask_all+=mask_thr
+
+        #pub
+        self.pallet_mask_pub.publish(pallet_mask_msg)
+
+        # Mask Result
+        cv2.imshow('Black Background Mask', mask_all)
+        cv2.imshow('Only Mask', img_show)
+        # 按下q鍵退出程式
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            rospy.signal_shutdown("quit")
             
 
 
