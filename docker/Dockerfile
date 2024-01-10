@@ -128,18 +128,19 @@ RUN apt update \
 RUN sudo apt update
 RUN sudo apt install -y software-properties-common 
 
-RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-####Realsense####
-RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
-## Install packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  #Realsense SDK depend
-#   librealsense2-dkms \
-  librealsense2-utils \
-  librealsense2-dev \
-  librealsense2-dbg \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists  
+# # * Install Altek_3D_Camera SDK
+# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
+# ####Realsense####
+# RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
+# ## Install packages
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#   #Realsense SDK depend
+# #   librealsense2-dkms \
+#   librealsense2-utils \
+#   librealsense2-dev \
+#   librealsense2-dbg \
+#   && apt-get clean \
+#   && rm -rf /var/lib/apt/lists  
 
 WORKDIR /
 
@@ -155,23 +156,18 @@ RUN ./config/shell/bash_setup.sh "${USER}" "${GROUP}" \
 # # * Create work directory
 # RUN sudo mkdir -p /home/"${USER}"/work/Altek_3D_Camera
 
-# * Install Altek SDK
-# # ? COPY workable Altek_3D_Camera SDK (v2.49.0)
-# RUN sudo mkdir -p /home/"${USER}"/work/Altek_3D_Camera
-# # WORKDIR /home/"${USER}"/work/
+# * Install Altek_3D_Camera SDK
+# # ? COPY workable Altek_3D_Camera SDK (v2.49.0 tag:unknown)_silver camera
 # COPY ./Altek_3D_Camera /home/"${USER}"/work/Altek_3D_Camera
+# ? Altek_3D_Camera Github (v2.49.0 tag:v67)_black camera
+RUN sudo git clone --branch v67 https://github.com/owin1022/Altek_3D_Camera.git /home/"${USER}"/work/Altek_3D_Camera
 
-# # ? Altek_3D_Camera Github (v2.49.0 tag:v67) currently CANNOT detect Altek Camera
-# RUN sudo git clone https://github.com/owin1022/Altek_3D_Camera.git /home/"${USER}"/work/Altek_3D_Camera
-
-# WORKDIR /home/"${USER}"/work/Altek_3D_Camera
-# RUN sudo mkdir build 
-# WORKDIR /home/"${USER}"/work/Altek_3D_Camera/build
-# RUN sudo cmake .. -DCMAKE_BUILD_TYPE=Release 
-# RUN sudo make uninstall && \
-#     sudo make clean && \
-#     sudo make -j12 && \
-#     sudo make install
+WORKDIR /home/"${USER}"/work/Altek_3D_Camera/build
+RUN sudo cmake .. -DCMAKE_BUILD_TYPE=Release \
+    && sudo make uninstall \
+    && sudo make clean \
+    && sudo make -j12 \
+    && sudo make install
 
 # * Switch workspace to ~/work
 RUN sudo mkdir -p /home/"${USER}"/work
