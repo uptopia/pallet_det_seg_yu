@@ -48,8 +48,8 @@ COPY --chown="${USER}":"${GROUP}" --chmod=0775 config config
 ############################### INSTALL #######################################
 # * Install packages
 RUN apt update
-RUN apt update
-RUN apt install -y --no-install-recommends \
+RUN apt update \
+    && apt install -y --no-install-recommends \
         sudo \
         vim \
         git \
@@ -71,6 +71,7 @@ RUN apt install -y --no-install-recommends \
         python3-pyqt5 \
         # * ROS depend tools
         lsb-release \
+        software-properties-common \
     && apt clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -83,64 +84,53 @@ RUN ./config/pip/pip_setup.sh
 #pytorch：https://pytorch.org/get-started/previous-versions
 #mmcv：https://mmcv.readthedocs.io/en/latest/get_started/installation.html 
 
-RUN pip3 install --upgrade --force-reinstall pip && \
-    pip3 install \
-    torch==1.10.1+cu111 \
-    torchvision==0.11.2+cu111 \
-    torchaudio==0.10.1 \
-    -f https://download.pytorch.org/whl/cu111/torch_stable.html
-
-# SOLO depend tools
-RUN pip3 install \
-    terminaltables \
-    pycocotools \
-    shapely \
-    scipy \
-    -U openmim 
-RUN mim install mmcv-full==1.7.1
-RUN mim install mmengine
-RUN pip3 install yapf==0.40.1
-
+RUN pip3 install --upgrade --force-reinstall pip \
+    && pip3 install \
+        torch==1.10.1+cu111 \
+        torchvision==0.11.2+cu111 \
+        torchaudio==0.10.1 \
+        -f https://download.pytorch.org/whl/cu111/torch_stable.html
+RUN pip3 install --upgrade --force-reinstall pip \
+    && pip3 install \
+        # SOLO depend tools
+        terminaltables \
+        pycocotools \
+        shapely \
+        scipy \
+        yapf==0.40.1 \
+        -U openmim \
+    && mim install \
+        mmcv-full==1.7.1 \
+        mmengine
 
 # * Install ROS noetic
-RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > \
-    /etc/apt/sources.list.d/ros-latest.list \
-    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' \
-    --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
-    && curl -sSL \
-    'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' \
-    | sudo apt-key add - \
-    && apt update && apt install -y --no-install-recommends ros-noetic-desktop-full \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV ROS_DISTRO noetic
-RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >>/home/$USER/.bashrc
-
-RUN apt update \
-    && apt install -y --no-install-recommends \
+RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list \
+    && apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 \
+    && curl -sSL 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xC1CF6E31E6BADE8868B172B4F42ED6FBAB17C654' | sudo apt-key add - \
+    && apt update && apt install -y --no-install-recommends \
+        ros-$ROS_DISTRO-desktop-full \
         # * ROS depend tools
-        ros-noetic-ddynamic-reconfigure \
-        ros-noetic-rgbd-launch \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
+        ros-$ROS_DISTRO-ddynamic-reconfigure \
+        ros-$ROS_DISTRO-rgbd-launch \
+        ros-$ROS_DISTRO-catkin \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && echo "source /opt/ros/$ROS_DISTRO/setup.bash" >>/home/$USER/.bashrc
 
-RUN sudo apt update
-RUN sudo apt install -y software-properties-common 
-
-# # * Install Altek_3D_Camera SDK
-# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE && sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-# ####Realsense####
-# RUN sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u
-# ## Install packages
-# RUN apt-get update && apt-get install -y --no-install-recommends \
-#   #Realsense SDK depend
-# #   librealsense2-dkms \
-#   librealsense2-utils \
-#   librealsense2-dev \
-#   librealsense2-dbg \
-#   && apt-get clean \
-#   && rm -rf /var/lib/apt/lists  
+# * Install Realsense SDK
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || \
+    sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE \
+    && sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" -u \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        # Realsense SDK depend
+        librealsense2-dkms \
+        librealsense2-utils \
+        librealsense2-dev \
+        librealsense2-dbg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists
 
 WORKDIR /
 
@@ -153,27 +143,20 @@ RUN ./config/shell/bash_setup.sh "${USER}" "${GROUP}" \
     && ./config/shell/tmux/tmux_setup.sh "${USER}" "${GROUP}" \
     && sudo rm -rf /config
 
-# # * Create work directory
-# RUN sudo mkdir -p /home/"${USER}"/work/Altek_3D_Camera
+# # * Install Altek_3D_Camera SDK
+# # # ? COPY workable Altek_3D_Camera SDK (v2.49.0 tag:unknown)_silver camera
+# # COPY ./Altek_3D_Camera /home/"${USER}"/work/Altek_3D_Camera
+# # ? Altek_3D_Camera Github (v2.49.0 tag:v67)_black camera
+# RUN sudo git clone --branch v67 https://github.com/owin1022/Altek_3D_Camera.git /home/"${USER}"/work/Altek_3D_Camera
 
-# * Install Altek_3D_Camera SDK
-# # ? COPY workable Altek_3D_Camera SDK (v2.49.0 tag:unknown)_silver camera
-# COPY ./Altek_3D_Camera /home/"${USER}"/work/Altek_3D_Camera
-# ? Altek_3D_Camera Github (v2.49.0 tag:v67)_black camera
-RUN sudo git clone --branch v67 https://github.com/owin1022/Altek_3D_Camera.git /home/"${USER}"/work/Altek_3D_Camera
+# WORKDIR /home/"${USER}"/work/Altek_3D_Camera/build
+# RUN sudo cmake .. -DCMAKE_BUILD_TYPE=Release \
+#     && sudo make uninstall \
+#     && sudo make clean \
+#     && sudo make -j12 \
+#     && sudo make install
 
-WORKDIR /home/"${USER}"/work/Altek_3D_Camera/build
-RUN sudo cmake .. -DCMAKE_BUILD_TYPE=Release \
-    && sudo make uninstall \
-    && sudo make clean \
-    && sudo make -j12 \
-    && sudo make install
-
-# * Switch workspace to ~/work
-RUN sudo mkdir -p /home/"${USER}"/work
-WORKDIR /home/"${USER}"/work
-
-# WORKDIR /home/"${USER}"/work/
+WORKDIR /home/"${USER}"/work/
 
 # * Make SSH available
 EXPOSE 22

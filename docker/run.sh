@@ -2,7 +2,6 @@
 
 # Get dependent parameters
 source "$(dirname "$(readlink -f "${0}")")/get_param.sh"
-
 docker run --rm \
     --privileged \
     --network=host \
@@ -15,7 +14,7 @@ docker run --rm \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v /etc/timezone:/etc/timezone:ro \
     -v /etc/localtime:/etc/localtime:ro \
-    -v ${WS_PATH}:/home/${user}/work \
+    -v ${WS_PATH}/..:/home/${user}/work \
     -it --name "${CONTAINER}" "${DOCKER_HUB_USER}"/"${IMAGE}" \
 # -v /dev:/dev \
     # ${GPU_FLAG} \
