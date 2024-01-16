@@ -97,16 +97,33 @@ docker cp pallet.pth 896ac4d402bb:/home/iclab/work/src/mmdetection2/work_dirs
 `roslaunch pallet_seg_pose solo_pallet_cam.launch`
 
 ```mermaid
-flowchart LR
-    A[Object\nDetection] 
-    A -->|ROS\nTopics| B{Realtime?}
-    A -->|ROS\nServices| C{Realtime?}
-    B -->|NO: rosbag | D[* 執行seg realtime: `roslaunch pallet_seg pallet_seg_altek_cam.launch`
-                        * 執行seg&pose realtime: `roslaunch pallet_seg_pose solo_pallet_cam.launch`]
-    B -->|Yes: camera| E[* 執行seg realtime: `roslaunch pallet_seg pallet_seg_altek_cam.launch`
-                        * 執行seg&pose realtime: `roslaunch pallet_seg_pose solo_pallet_cam.launch`]
-    C -->|NO: rosbag | F[* 執行seg realtime: `roslaunch pallet_seg pallet_seg_altek_cam.launch`
-                        * 執行seg&pose realtime: `roslaunch pallet_seg_pose solo_pallet_cam.launch`]
-    C -->|Yes: camera| G[* 執行seg realtime: `roslaunch pallet_seg pallet_seg_altek_cam.launch`
-                        * 執行seg&pose realtime: `roslaunch pallet_seg_pose solo_pallet_cam.launch`]    
+graph LR
+    A[Pallet\nObject\nDetection] 
+    A -->|ROS\nTopics| B(Realtime?)
+    A -->|ROS\nServices| C(Realtime?)
+    B -->|N: rosbag | D[__A1_____ roslaunch pallet_det pallet_det_bag.launch\n __A1+B1__ roslaunch pallet_det_pose pallet_det_pose_bag.launch]
+    B -->|Y: camera | E[__A1_____ roslaunch pallet_det pallet_det_cam.launch\n __A1+B1__ roslaunch pallet_det_pose pallet_det_pose_cam.launch]
+    C -->|N: rosbag | F[__A2_____ roslaunch pallet_det_srv pallet_det_srv_bag.launch\n __A2+B2__ roslaunch pallet_det_pose_srv pallet_det_pose_srv_bag.launch]
+    C -->|Y: camera | G[__A2_____ roslaunch pallet_det_srv pallet_det_srv_cam.launch\n __A2+B2__ roslaunch pallet_det_pose_srv pallet_det_pose_srv_cam.launch]
+
+    style D text-align:left
+    style E text-align:left
+    style F text-align:left
+    style G text-align:left 
+```
+
+```mermaid
+graph LR
+    A[Pallet\nInstance\nSegmentation] 
+    A -->|ROS\nTopics| B(Realtime?)
+    A -->|ROS\nServices| C(Realtime?)
+    B -->|N: rosbag | D[__C1_____ roslaunch pallet_seg pallet_seg_bag.launch\n __C1+D1__ roslaunch pallet_seg_pose pallet_seg_pose_bag.launch]
+    B -->|Y: camera | E[__C1_____ roslaunch pallet_seg pallet_seg_cam.launch\n __C1+D1__ roslaunch pallet_seg_pose pallet_seg_pose_cam.launch]
+    C -->|N: rosbag | F[__C2_____ roslaunch pallet_seg_srv pallet_seg_srv_bag.launch\n __C2+D2__ roslaunch pallet_seg_pose_srv pallet_seg_pose_srv_bag.launch]
+    C -->|Y: camera | G[__C2_____ roslaunch pallet_seg_srv pallet_seg_srv_cam.launch\n __C2+D2__ roslaunch pallet_seg_pose_srv pallet_seg_pose_srv_cam.launch]
+
+    style D text-align:left
+    style E text-align:left
+    style F text-align:left
+    style G text-align:left 
 ```
