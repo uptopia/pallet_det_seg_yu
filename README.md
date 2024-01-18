@@ -14,7 +14,7 @@
 
 ## Table of content
 - [RGB-D Camera](#rgb-d-camera)
-- [Installation](#installation)
+- [Installation and Run with Docker](#installation-and-run-with-docker)
 - [Pallet Object Detection](#pallet-object-detection)
 - [Pallet Instance Segmentation](#pallet-instance-segmentation)
 
@@ -80,7 +80,7 @@ sudo chmod 777 /dev/video0
 ---
 title: Pallet Object Detection + Pose Estimation
 ---
-%%{init: {"flowchart": {"wrappingWidth": 700, "htmlLabels": true}} }%%
+%%{init: {"flowchart": {"wrappingWidth": 700, "htmlLabels": true, "securityLevel":"loose"}} }%%
 graph LR 
     A[Pallet\nObject\nDetection] 
     A -->|ROS\nTopics| B(Realtime?)
@@ -129,7 +129,7 @@ docker cp pallet.pth 896ac4d402bb:/home/iclab/work/src/mmdetection2/work_dirs
 ---
 title: Pallet Instance Segmentation + Pose Estimation
 ---
-%%{init: {"flowchart": {"wrappingWidth": 700, "htmlLabels": true, "defaultRenderer": "dagre-d3"}} }%%
+%%{init: {"flowchart": {"wrappingWidth": 700, "htmlLabels": true, "defaultRenderer": "dagre-d3"}, "securityLevel":"loose"} }%%
 graph LR
     A[Pallet\nInstance\nSegmentation] 
     A -->|ROS\nTopics| B(Realtime?)
