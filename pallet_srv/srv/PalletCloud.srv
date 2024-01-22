@@ -1,7 +1,7 @@
 bool ready_to_get_pallet_cloud
 ---
 # Instance masks as Image
-sensor_msgs/Image[] masks
+sensor_msgs/Image[] pallet_masks
 
 # Organized Point Cloud
-sensor_msgs/PointCloud2 organized_cloud
+sensor_msgs/PointCloud2 organized_cloud_msg
