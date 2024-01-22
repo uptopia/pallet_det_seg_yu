@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   message_filters
   message_generation
-  pallet_mask
+  pallet_seg
   pallet_srv
   roscpp
   rospy

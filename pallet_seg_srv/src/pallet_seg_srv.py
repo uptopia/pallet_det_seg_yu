@@ -16,24 +16,29 @@
 '''
 
 import os
+import sys
 import time
 import numpy as np
 
+# OpenCV
 import cv2
-import sys
 sys.path.insert(1, '/opt/installer/open_cv/cv_bridge/lib/python3/dist-packages/')
 from cv_bridge import CvBridge, CvBridgeError
 
+# mmdetection, mmcv
 Workspace_Path = sys.path[0].rsplit('/',2)[0]
 sys.path.append(Workspace_Path)
 sys.path.append(Workspace_Path+'/mmdetection2/')
 import mmcv
 from mmdet.apis import init_detector, inference_detector
 
+# ROS
 import rospy
 from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import Float64MultiArray, Int32MultiArray
-from message_filters import TimeSynchronizer
+import message_filters # TimeSynchronizer
+
+# self-defined ROS msg, srv
 from pallet_seg.msg import pallet_mask
 from pallet_srv.srv import PalletCloud, PalletCloudResponse
 
@@ -56,7 +61,8 @@ class PalletSegServer:
         self.bridge = CvBridge()
         self.rgb_img_msg = Image()
         self.organized_cloud_msg = PointCloud2()
-        self.pallet_masks = PalletCloudResponse.pallet_masks()
+        # self.pallet_masks_list = PalletCloudResponse.pallet_masks_list()
+        self.pallet_masks_list = []
 
         rospy.init_node("PalletSegServer")
 
@@ -68,27 +74,36 @@ class PalletSegServer:
         cloud_sub = message_filters.Subscriber("/camera/depth_registered/points", PointCloud2)
 
         syns = message_filters.ApproximateTimeSynchronizer([rgb_sub, cloud_sub], 10, 0.1, True)
-        syns = registerCallback(multi_callback)
+        syns.registerCallback(self.multi_callback)
 
-        server = rospy.Service("/pallet_seg_server", PalletCloud, self.pallet_cloud_callback)
+        server = rospy.Service("/pallet_seg_service", PalletCloud, self.pallet_cloud_callback)
 
         rospy.spin()
 
     def multi_callback(self, rgb_msg, cloud_msg):
         self.rgb_img_msg = rgb_msg
         self.organized_cloud_msg = cloud_msg
+        print("cb")
 
-    def pallet_cloud_callback(self, req: PalletCloud, res: PalletCloudResponse):
+    def pallet_cloud_callback(self, req):
+        print("=============req:", req)
+    
         if req.ready_to_get_pallet_cloud == True:
-
+            res = PalletCloudResponse()
             # res.pallet_ids      = TODO
             # res.pallet_scores   = TODO
-            res.pallet_masks = self.pallet_masks
+            
             res.organized_cloud_msg = self.organized_cloud_msg
-
-            return res
+            while self.pallet_ins_segmentation():
+                res.pallet_masks_list = self.pallet_masks_list
+                print("res", res.pallet_masks_list)
+                return res
+        else:
+            print("req.ready_to_get_pallet_cloud == False")
 
     def pallet_ins_segmentation(self):
+
+        print("*******RUN pallet_ins_segmentation************")
         # ============
         #  RGB Image 
         # ============
@@ -140,14 +155,14 @@ class PalletSegServer:
             for _ in range(num_mask)
         ]
 
-        pallet_mask_msg = PalletCloudResponse.pallet_masks()
+        pallet_mask_msg = []
         for mask_id in range(elibible_mask):
             print("mask_id:", mask_id)
             cur_mask = seg_masks[mask_id]
 
             h, w = len(cur_mask), len(cur_mask[0])
-            print(h, w, cur_mask.shape)
-            print(cur_mask)
+            # print(h, w, cur_mask.shape)
+            # print(cur_mask)
             
             cur_mask = np.array((cur_mask>0.5), dtype = np.uint8)
             cur_mask_bool = np.array(cur_mask, dtype = bool)
@@ -161,10 +176,11 @@ class PalletSegServer:
 
             #pub         
             mask_msg = self.bridge.cv2_to_imgmsg(mask_thr, encoding="passthrough")
-            pallet_mask_msg.masks.append(mask_msg)
+            print(type(mask_msg))
+            pallet_mask_msg.append(mask_msg)
 
-        # ser
-        self.pallet_masks = pallet_mask_msg
+        # service
+        self.pallet_masks_list = pallet_mask_msg
 
         # Mask Result
         if show_solo_result == True:
