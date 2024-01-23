@@ -13,6 +13,9 @@
   <!-- SOLOv2 Instance Segmentation -->
   <node pkg="pallet_seg_srv" type="pallet_seg_srv.py" name="pallet_seg_srv" output="screen"/>
 
+  <!-- SOLOv2 Pallet Mask Cloud -->
+  <node name="pallet_seg_pose" pkg="pallet_seg_pose" type="pallet_seg_pose" output="screen" /> 
+
   <!-- Open rviz with predefined settings -->
   <node type="rviz" name="rviz" pkg="rviz" args="-d $(find pallet_seg_pose)/conf/pallet_rviz.rviz" respawn="true"/>
 

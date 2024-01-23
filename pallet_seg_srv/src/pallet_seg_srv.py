@@ -40,7 +40,7 @@ import message_filters # TimeSynchronizer
 
 # self-defined ROS msg, srv
 from pallet_seg.msg import pallet_mask
-from pallet_srv.srv import PalletCloud, PalletCloudResponse
+from pallet_srv.srv import PalletSeg, PalletSegResponse
 
 #=====Parameters Setting=====#
 show_solo_result = True
@@ -69,14 +69,17 @@ class PalletSegServer:
         # Build SOLOv2 model from a config file and a checkpoint file
         self.model = init_detector(config_file, checkpoint_file, device='cuda:0')
         
-        # Synchronize subscribe topics
+        # Synchronize & Subscribe topics
         rgb_sub   = message_filters.Subscriber("/camera/color/image_raw", Image)
         cloud_sub = message_filters.Subscriber("/camera/depth_registered/points", PointCloud2)
 
         syns = message_filters.ApproximateTimeSynchronizer([rgb_sub, cloud_sub], 10, 0.1, True)
         syns.registerCallback(self.multi_callback)
 
-        server = rospy.Service("/pallet_seg_service", PalletCloud, self.pallet_cloud_callback)
+        # ROSService Server
+        server = rospy.Service("/pallet_seg_service", PalletSeg, self.pallet_cloud_callback)
+
+        self.pallet_mask_pub = rospy.Publisher("/pallet_mask", pallet_mask, queue_size=10)
 
         rospy.spin()
 
@@ -85,8 +88,7 @@ class PalletSegServer:
         self.organized_cloud_msg = cloud_msg
         #OK
         self.pallet_masks_list = self.pallet_ins_segmentation(rgb_msg)
-        print("cb")
-
+        
     def pallet_cloud_callback(self, req):
         print("=============req:", req)
     
@@ -96,13 +98,13 @@ class PalletSegServer:
             # curr_cloud = self.organized_cloud_msg
             # curr_rgb = self.rgb_img_msg
 
-            # res = PalletCloudResponse()
+            # res = PalletSegResponse()
             # res.pallet_masks_list = self.pallet_ins_segmentation(curr_rgb)
             # res.organized_cloud_msg = self.organized_cloud_msg
             # return res
 
             #OK
-            res = PalletCloudResponse()
+            res = PalletSegResponse()
             # res.pallet_ids      = TODO
             # res.pallet_scores   = TODO
             res.pallet_masks_list = self.pallet_masks_list
@@ -187,7 +189,6 @@ class PalletSegServer:
 
             #pub         
             mask_msg = self.bridge.cv2_to_imgmsg(mask_thr, encoding="passthrough")
-            print(type(mask_msg))
             pallet_mask_msg.append(mask_msg)
 
         # # service
@@ -199,7 +200,8 @@ class PalletSegServer:
             cv2.imshow('Pallet Masks_RGB image + Masks', img_show)
             if cv2.waitKey(1) & 0xFF == ord('q'):  # Press q to exit
                 rospy.signal_shutdown("quit")
-
+        #pub
+        self.pallet_mask_pub.publish(pallet_mask_msg)
         return pallet_mask_msg
 
 if __name__=="__main__":
