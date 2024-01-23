@@ -92,7 +92,7 @@ class PalletSegServer:
     def pallet_cloud_callback(self, req):
         print("=============req:", req)
     
-        if req.ready_to_get_pallet_cloud == True:
+        if req.ready_to_get_pallet_seg == True:
 
             # #not OK
             # curr_cloud = self.organized_cloud_msg
@@ -111,7 +111,7 @@ class PalletSegServer:
             res.organized_cloud_msg = self.organized_cloud_msg
             return res
         else:
-            print("req.ready_to_get_pallet_cloud == False")
+            print("req.ready_to_get_pallet_seg == False")
             return None
 
     def pallet_ins_segmentation(self, rgb_img_msg):

@@ -18,21 +18,20 @@ import rospy
 # self-defined ROS msg, srv
 from pallet_srv.srv import PalletSeg
 
-class PalletCloudClient:
-    def __init__(self, ready_to_get_pallet_cloud:True) -> None:
-        self.get_pallet_cloud = rospy.ServiceProxy('/pallet_seg_service', PalletSeg)
-        self.ready_to_get_pallet_cloud = ready_to_get_pallet_cloud
+class PalletSegClient:
+    def __init__(self, ready_to_get_pallet_seg:True) -> None:
+        self.get_pallet_seg = rospy.ServiceProxy('/pallet_seg_service', PalletSeg)
+        self.ready_to_get_pallet_seg = ready_to_get_pallet_seg
         self.usage()
-        # while True:
-        self.get_pallet_cloud_client()
+        self.get_pallet_seg_client()
     
     def usage(self):
-        print("Requesting [ready_to_get_pallet_cloud] = %s"%(str(self.ready_to_get_pallet_cloud)))
+        print("Requesting [ready_to_get_pallet_seg] = %s"%(str(self.ready_to_get_pallet_seg)))
         
-    def get_pallet_cloud_client(self):
+    def get_pallet_seg_client(self):
         rospy.wait_for_service('/pallet_seg_service')
         try:
-            res = self.get_pallet_cloud(self.ready_to_get_pallet_cloud)
+            res = self.get_pallet_seg(self.ready_to_get_pallet_seg)
 
             print("Server Response...")
             print("pallet_masks_list: ", len(res.pallet_masks_list))
@@ -41,9 +40,9 @@ class PalletCloudClient:
             print("Service call failed: ", e)
 
 if __name__ == "__main__":
-    PalletCloudClient(True)
+    PalletSegClient(True)
     # if len(sys.argv) == 2:
-    #     PalletCloudClient(sys.argv[1])
+    #     PalletSegClient(sys.argv[1])
     # else:
-    #     print("Error: require 1 arguement [ready_to_get_pallet_cloud = True/False] to execute")
+    #     print("Error: require 1 arguement [ready_to_get_pallet_seg = True/False] to execute")
     #     sys.exit(1)

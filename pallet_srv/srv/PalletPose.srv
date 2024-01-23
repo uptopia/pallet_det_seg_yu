@@ -1,4 +1,4 @@
 bool arrived_at_take_pic_pose
-float32[] forklift_H_cam
+float32[] forklift_H_cam_array
 ---
-float32[] forklift_H_pallet
+float32[] forklift_H_pallet_array

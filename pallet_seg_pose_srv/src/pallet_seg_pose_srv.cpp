@@ -1,3 +1,5 @@
+//PalletCloudServer
+
 /** @file pallet_seg_pose.cpp
   * @brief 使用SOLOv2托盤遮罩內的點雲，估測托盤姿態
 
@@ -5,8 +7,8 @@
          (2)/solo_mask SOLOv2遮罩
   * 輸出：(1)/pallet_cloud_pub 遮罩內提取的點雲 
   *      (2)/pallet_pose 托盤姿態
-  * organized_cloud_cb：轉換有序點雲格式
-  * pallet_mask_cb：讀取SOLOv2遮罩
+  * process_organized_pointcloud：轉換有序點雲格式
+  * process_pallet_mask：讀取SOLOv2遮罩
   * get_multi_pallet_cloud：針對多個遮罩
   *      (1)提取遮罩內點雲 (2)est_scene_plane_coeff估測姿態 (3)發佈托盤點雲&姿態
   * est_scene_plane_coeff：以SAC_RANSAC擬合遮罩提取出的托盤點雲，
@@ -24,6 +26,9 @@
 #include <tf2_eigen/tf2_eigen.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+
+#include <pallet_srv/PalletSeg.h>
+#include <pallet_srv/PalletPose.h>
 
 // pcl
 #include <pcl/io/pcd_io.h>
@@ -107,6 +112,8 @@ pcl::PointCloud<PointTRGB>::Ptr forking_pt(new pcl::PointCloud<PointTRGB>);
 
 ros::Publisher pallet_cloud_pub, multi_pallet_cloud_pub, pallet_pose_pub, fork_pt_pub;
 sensor_msgs::PointCloud2 pallet_cloud_msg, multi_pallet_cloud_msg, forking_pt_msg;
+
+ros::NodeHandle nh;
 
 void est_scene_plane_coeff(pcl::PointCloud<PointTRGB>::Ptr pallet_cloud_ori, pcl::ModelCoefficients::Ptr coeff_plane, pcl::PointCloud<PointTRGB>::Ptr pallet_plane)
 {
@@ -379,13 +386,6 @@ bool get_multi_pallet_cloud()
             Eigen::Isometry3d mat = tf2::transformToEigen(transform);
             Eigen::Matrix4d cam_H_pallet = mat.matrix();
             cout << "cam_H_pallet:\n" << cam_H_pallet << endl;
-            std::vector<float> cam_H_pallet_arr;
-            for(int i=0; i<cam_H_pallet.cols(); i++)
-                for(int j=0; j<cam_H_pallet.rows(); j++)
-                    cam_H_pallet_arr.push_back(cam_H_pallet(i, j));
-            for(int m=0; m<cam_H_pallet_arr.size(); m++)
-                cout << cam_H_pallet_arr[m] <<", ";
-            cout <<endl;
 
             //=============================
             // Translation, Rotation Error
@@ -420,9 +420,9 @@ bool get_multi_pallet_cloud()
     return true;
 }
 
-void pallet_mask_cb(const pallet_seg::pallet_mask & pallet_mask_msg)
+void process_pallet_mask(const pallet_seg::pallet_mask & pallet_mask_msg)
 {
-    cout << "pallet_mask_cb" << endl;
+    cout << "process_pallet_mask" << endl;
     pallet_all.clear();
     try
     {
@@ -441,17 +441,15 @@ void pallet_mask_cb(const pallet_seg::pallet_mask & pallet_mask_msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    
-    bool multi_pallet_get = get_multi_pallet_cloud();
 }
 
-void organized_cloud_cb(const sensor_msgs::PointCloud2ConstPtr& organized_cloud_msg)
+void process_organized_pointcloud(const sensor_msgs::PointCloud2ConstPtr& organized_cloud_msg)
 {
     //==================================================//
     // Organized Point Cloud; Depth Point Cloud
     // Subscribe "/camera/depth_registered/points" topic
     //==================================================//
-    cout<<"organized_cloud_cb"<<endl;
+    cout<<"process_organized_pointcloud"<<endl;
     cout<< organized_cloud_msg->header.stamp <<endl;
     int points = organized_cloud_msg->height * organized_cloud_msg->width;
 
@@ -469,16 +467,83 @@ void organized_cloud_cb(const sensor_msgs::PointCloud2ConstPtr& organized_cloud_
     }
 }
 
+// void estimate_pallet_pose()
+// {
+//     // pallet_seg_srv.response.pallet_cloud
+// }
+
+bool pallet_pose_callback(pallet_srv::PalletPose::Request &req, pallet_srv::PalletPose::Response &res)
+{
+    Eigen::Matrix4d cam_H_pallet = Eigen::Matrix4d::Identity(); 
+    if(req.arrived_at_take_pic_pose == true)
+    {
+
+        ros::ServiceClient client_pallet_seg = nh.serviceClient<pallet_srv::PalletSeg>("/pallet_seg_service");
+        pallet_srv::PalletSeg pallet_seg_srv;
+        pallet_seg_srv.request.ready_to_get_pallet_seg = true;
+        if(client_pallet_seg.call(pallet_seg_srv))
+        {
+            cout <<"ok"<<endl;
+            // int pallet_id = pallet_seg_srv.response.pallet_id;
+            // float pallet_score = pallet_seg_srv.response.pallet_score;
+            sensor_msgs::PointCloud2 organized_cloud_msg = pallet_seg_srv.response.organized_cloud_msg;
+            sensor_msgs::Image pallet_masks_list = pallet_seg_srv.response.pallet_masks_list;
+
+            // process_organized_pointcloud();
+            // process_pallet_mask();
+            // // cout << pallet_seg_srv.response.pallet_id << endl;
+            // // cout << pallet_seg_srv.response.pallet_score << endl;
+            // // cout << pallet_seg_srv.response.pallet_cloud << endl;
+            // // ROS_INFO("pallet_seg_srv.response.pallet_id = %d", pallet_seg_srv.response.pallet_id)
+
+            // // cam_H_pallet = estimate_pallet_pose(pallet_seg_srv.response.pallet_cloud); //TODO
+            // bool multi_pallet_get = get_multi_pallet_cloud();
+        }
+        else
+        {
+            ROS_ERROR("Failed to call service get_pallet_cloud");
+        }
+        //=========
+        //testing
+        //=========
+        // array2matrix
+        std::vector<float> arr = req.forklift_H_cam_array;
+        Eigen::Matrix4d forklift_H_cam(4,4);
+        forklift_H_cam << arr[0], arr[1], arr[2], arr[3],
+                          arr[4], arr[5], arr[6], arr[7],
+                          arr[8], arr[9], arr[10], arr[11],
+                          arr[12], arr[13], arr[14], arr[15];
+        // transform
+        Eigen::Matrix4d forklift_H_pallet = forklift_H_cam * cam_H_pallet;
+        cout << "forklift_H_pallet:\n" << forklift_H_pallet << endl;
+
+        // matrix2array
+        std::vector<float> forklift_H_pallet_arr;
+        for(int i=0; i<forklift_H_pallet.cols(); i++)
+            for(int j=0; j<forklift_H_pallet.rows(); j++)
+                forklift_H_pallet_arr.push_back(forklift_H_pallet(i, j));
+        for(int m=0; m<forklift_H_pallet_arr.size(); m++)
+            cout << forklift_H_pallet_arr[m] <<", ";
+        cout <<endl;
+        res.forklift_H_pallet_array = forklift_H_pallet_arr;
+    }
+    else
+    {
+        cout << "req.arrived_at_take_pic_pose == False" << endl;
+        // res = ??? //TODO
+    }
+    return true;
+}
+
 int main(int argc, char** argv)
 {   
-    ros::init(argc, argv, "pallet_seg_pose");
-    ros::NodeHandle nh;
+    ros::init(argc, argv, "pallet_seg_pose_srv");
+    // ros::NodeHandle nh;
     
-    // Subscriber 
-    // Synchronize https://blog.csdn.net/zhngyue123/article/details/108004007
-    ros::Subscriber sub_depth_cloud = nh.subscribe("/camera/depth_registered/points", 1, organized_cloud_cb);   //depth point cloud (organized)
-    ros::Subscriber sub_pallet_mask = nh.subscribe("/pallet_mask", 1, pallet_mask_cb);                          //SOLOv2 segmentation result
-
+    // ROS Service Server
+    // ros::ServiceClient client_pallet_seg = nh.serviceClient<pallet_srv::PalletSeg>("/pallet_seg_service");
+    ros::ServiceServer server_pallet_pose = nh.advertiseService("/pallet_pose_service", pallet_pose_callback);
+    
     // Publisher
     pallet_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/pallet_cloud_pub", 1);
     multi_pallet_cloud_pub = nh.advertise<sensor_msgs::PointCloud2> ("/multi_pallet_cloud_pub", 1);
