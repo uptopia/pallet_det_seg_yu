@@ -16,11 +16,11 @@ import numpy as np
 import rospy
 
 # self-defined ROS msg, srv
-from pallet_srv.srv import PalletCloud
+from pallet_srv.srv import PalletSeg
 
 class PalletCloudClient:
     def __init__(self, ready_to_get_pallet_cloud:True) -> None:
-        self.get_pallet_cloud = rospy.ServiceProxy('/pallet_seg_service', PalletCloud)
+        self.get_pallet_cloud = rospy.ServiceProxy('/pallet_seg_service', PalletSeg)
         self.ready_to_get_pallet_cloud = ready_to_get_pallet_cloud
         self.usage()
         # while True:
