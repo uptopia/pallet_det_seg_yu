@@ -23,8 +23,8 @@ class PalletCloudClient:
         self.get_pallet_cloud = rospy.ServiceProxy('/pallet_seg_service', PalletCloud)
         self.ready_to_get_pallet_cloud = ready_to_get_pallet_cloud
         self.usage()
-        while True:
-            self.get_pallet_cloud_client()
+        # while True:
+        self.get_pallet_cloud_client()
     
     def usage(self):
         print("Requesting [ready_to_get_pallet_cloud] = %s"%(str(self.ready_to_get_pallet_cloud)))
@@ -35,7 +35,7 @@ class PalletCloudClient:
             res = self.get_pallet_cloud(self.ready_to_get_pallet_cloud)
 
             print("Server Response...")
-            # print("pallet_masks_list: ", res.pallet_masks_list)
+            print("pallet_masks_list: ", len(res.pallet_masks_list))
             # print("organized_cloud_msg: ", res.organized_cloud_msg)
         except rospy.ServiceException as e:
             print("Service call failed: ", e)

@@ -83,25 +83,36 @@ class PalletSegServer:
     def multi_callback(self, rgb_msg, cloud_msg):
         self.rgb_img_msg = rgb_msg
         self.organized_cloud_msg = cloud_msg
+        #OK
+        self.pallet_masks_list = self.pallet_ins_segmentation(rgb_msg)
         print("cb")
 
     def pallet_cloud_callback(self, req):
         print("=============req:", req)
     
         if req.ready_to_get_pallet_cloud == True:
+
+            # #not OK
+            # curr_cloud = self.organized_cloud_msg
+            # curr_rgb = self.rgb_img_msg
+
+            # res = PalletCloudResponse()
+            # res.pallet_masks_list = self.pallet_ins_segmentation(curr_rgb)
+            # res.organized_cloud_msg = self.organized_cloud_msg
+            # return res
+
+            #OK
             res = PalletCloudResponse()
             # res.pallet_ids      = TODO
             # res.pallet_scores   = TODO
-            
+            res.pallet_masks_list = self.pallet_masks_list
             res.organized_cloud_msg = self.organized_cloud_msg
-            while self.pallet_ins_segmentation():
-                res.pallet_masks_list = self.pallet_masks_list
-                print("res", res.pallet_masks_list)
-                return res
+            return res
         else:
             print("req.ready_to_get_pallet_cloud == False")
+            return None
 
-    def pallet_ins_segmentation(self):
+    def pallet_ins_segmentation(self, rgb_img_msg):
 
         print("*******RUN pallet_ins_segmentation************")
         # ============
@@ -179,8 +190,8 @@ class PalletSegServer:
             print(type(mask_msg))
             pallet_mask_msg.append(mask_msg)
 
-        # service
-        self.pallet_masks_list = pallet_mask_msg
+        # # service
+        # self.pallet_masks_list = pallet_mask_msg
 
         # Mask Result
         if show_solo_result == True:
@@ -189,6 +200,7 @@ class PalletSegServer:
             if cv2.waitKey(1) & 0xFF == ord('q'):  # Press q to exit
                 rospy.signal_shutdown("quit")
 
+        return pallet_mask_msg
 
 if __name__=="__main__":
     PalletSegServer()
