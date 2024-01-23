@@ -21,6 +21,7 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_eigen/tf2_eigen.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 
@@ -371,6 +372,13 @@ bool get_multi_pallet_cloud()
             transform.transform.rotation.w = quat.w();
 
             br.sendTransform(transform);
+
+            //=============================
+            // Transform Quaternion to Matrix
+            //=============================
+            Eigen::Isometry3d mat = tf2::transformToEigen(transform);
+            Eigen::Matrix4d cam_H_pallet = mat.matrix();
+            cout << "cam_H_pallet:\n" << cam_H_pallet << endl;
 
             //=============================
             // Translation, Rotation Error
